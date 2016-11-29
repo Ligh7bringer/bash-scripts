@@ -1,0 +1,59 @@
+#!/bin/sh
+#check for number of arguments. If none or more than 1 - exit, else - carry on
+if [ $# -ne 1 ] 
+	then
+		echo "Usage: ./restore.sh <filename>"
+		exit
+fi
+
+#some constants:
+#extension for backups is saved here for easier renaming of files
+ext=".bak"
+#path to bin directory
+bindir=~/cw-linux/dbin/
+#path to the file where restore paths are stored
+restorefile=~/cw-linux/dbin/.paths
+
+#check if the file the user wants to restore actually exists in the bin
+if [ ! $(grep -w $1 $restorefile) ]
+	then
+	#if it doesnt - tell them and exit
+		echo File to be restored not found.
+		exit
+	#if it does - save it's original location in $path
+	else
+		path=$(grep -w $1 $restorefile)
+fi
+
+#if a file with the same name exists at the original location
+if [ -e $path ]
+	then
+	#add .bak to the filename and move it to its original location
+		mv $bindir$1 $path$ext
+		#update .paths file so it doesn't contain the path to the restored file anymore
+		#there's probably a better way to remove a line from a file but sed doesn't seem to work ?
+		grep -vw $path $restorefile > $restorefile.tmp 
+		mv $restorefile.tmp $restorefile
+		echo A file with the same name exists. File restored as $1.bak
+	else
+	#else check if the original directory still exists
+		if [ ! -d $(dirname $path) ]
+			then
+			#if it doesn't - create all parent folders (if any) and destination folder and restore the file
+				echo Destination folder does not exist. Creating it...
+				mkdir -p $(dirname $path)
+				mv $bindir$1 $path
+				#update .paths file so it doesn't contain the path to the restored file anymore
+				grep -vw $path $restorefile > $restorefile.tmp 
+				mv $restorefile.tmp $restorefile
+				echo File restored successfully.
+			else 
+			#if it still exists just move the file there
+				mv $bindir$1 $path
+				#update .paths file so it doesn't contain the path to the restored file anymore
+				grep -vw $path $restorefile > $restorefile.tmp 
+				mv $restorefile.tmp $restorefile
+				echo File restored successfully.
+		fi
+fi
+#end

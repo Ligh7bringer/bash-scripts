@@ -1,0 +1,32 @@
+#!/bin/sh
+#check for number of arguments. If less than 1 - exit, else - carry on
+if [ $# -lt 1 ] 
+	then
+		echo "Usage: ./del.sh <filepath> [filepath] .."
+		exit
+fi
+
+#constants:
+#path to bin directory
+bindir=~/cw-linux/dbin/
+#path to the file where restore paths are stored
+restorefile=~/cw-linux/dbin/.paths
+
+#iterate over all arguments one by one
+for file in "$@"
+do
+	#check if current argument is a file which exists
+    if [ ! -e "$file" ]
+    	then
+    	#if it doesn't exists - tell the user and stop
+    		echo "$file": File does not exist 
+    		exit   	
+    	else 
+    	#if it does - save it's original location in .paths 
+    		readlink -f $file >> $restorefile    		
+    	#and move the file in the bin
+    		mv "$file" $bindir  
+			echo File successfuly moved to the bin.    				 		    			    		  	
+    fi
+done
+#end
